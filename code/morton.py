@@ -116,6 +116,7 @@ def decode_magicbits_3D(morton):
     y = get_third_bits(morton>>numpy.uint64(1))
     x = get_third_bits(morton)
     return (numpy.uint32(x), numpy.uint32(y), numpy.uint32(z))
+
    
 #-----------------------------------------------------------------------
 #That's all folks!

@@ -2,13 +2,13 @@ pymorton
 ========
 ###v0.1
 
-A simple cli interface to morton.py library functions.  
+A simple cli interface for generating  morton codes via the shell.  
 Prototype code distributed under the MIT License.
 
 ##Installation
 
-1) Clone with git or untar the package to a local folder of your choosing.
-2) Create a symlink from the package's pymorton to ~/.local/bin
+1) Clone with git or untar the package to a local folder of your choosing.  
+2) Create a symlink from the package's pymorton to ~/.local/bin  
    or a different folder that exists in your path.
 
 ##Usage: 
@@ -34,14 +34,13 @@ Prototype code distributed under the MIT License.
     Show version info.
 
 ##Notes:
-1) The input of coordinate tuples must be separated by a newline character. 
-2) Tuple components (x,y,z) must be tab or space delimited.
+1) The input of coordinate tuples must be separated by a newline character.  
+2) Tuple components (x,y,z) must be tab or space delimited.  
 3) Input and output files can be used via shell pipes.  
-4) Decoding requires one to specify 2d or 3d conversion.
-5) Encoding will detect 2d or 3d conversion based on the number of components of the first coordinate entry.
+4) Decoding requires one to specify 2d or 3d conversion.  
+5) Encoding will detect 2d or 3d conversion based on the number of components of the first coordinate entry.  
 
 ##To do:
-1) Buffer input and output streams so that numpy genfromtxt commands can be
-leveraged for higher performance.
-2) Build an actual python wrapper to Jeroen Baert's c++ LibMorton for higher performance.
-3) Rewrite pymorton in c++ to serve as a cli interface to LibMorton.
+1) Buffer input and output streams so that numpy genfromtxt commands can be leveraged for higher performance.  
+2) Build an actual python wrapper to Jeroen Baert's c++ LibMorton for higher performance.  
+3) Rewrite pymorton in c++ to serve as a cli interface to LibMorton.  

@@ -2,8 +2,9 @@
 ########################################################################
 #pymorton
 #v0.1
-#A simple python based cli interface to morton.py library functions.
-#Not intended for high performance code.
+#A simple cli interface for generating  morton codes via the shell.  
+
+#This is a prototype. Not intended for high performance code.
 #Distributed under the MIT License.
 
 #Copyright (c) 2016 Jacob Pelletier 
@@ -43,7 +44,6 @@ import morton
 #Tests: Generate N random 32bit integers for x and y coordinates.
 #Convert to  Morton codes using 2d functions, then convert back to 
 #coordinate arrays and compare.
-
 def test_xy(N):
 	#Seeding with current time.
 	numpy.random.seed(int(time.time()))
@@ -358,13 +358,15 @@ def encode_line_2d(line, delim):
 	y = numpy.uint64(line_coords[1])
 	print(str(morton.encode_magicbits_2D(x,y)))
 
+
 def encode_line_3d(line, delim):
 	line_coords = line.rstrip('\n').split(delim)
 	x = numpy.uint64(line_coords[0])
 	y = numpy.uint64(line_coords[1])
 	z = numpy.uint64(line_coords[2])
 	print(str(morton.encode_magicbits_3D(x,y,z)))
-					
+
+
 def encode_stdin():
 	#Read stdin up to the first non-comment entry.
 	#Determine whether dim=2d or dim=3d.
