@@ -39,54 +39,55 @@ import numpy
 #2D Encoding
 
 def split_by_2(a):
-    x = numpy.uint64(a) & numpy.uint64(0xffffffff)
-    x = (x | x << numpy.uint64(16)) & numpy.uint64(0x0000ffff0000ffff)
-    x = (x | x << numpy.uint64(8)) & numpy.uint64(0x00ff00ff00ff00ff)
-    x = (x | x << numpy.uint64(4)) & numpy.uint64(0x0f0f0f0f0f0f0f0f)
-    x = (x | x << numpy.uint64(2)) & numpy.uint64(0x3333333333333333)
-    x = (x | x << numpy.uint64(1)) & numpy.uint64(0x5555555555555555)
-    return x
-    
+	x = numpy.uint64(a) & numpy.uint64(0xffffffff)
+	x = (x | x << numpy.uint64(16)) & numpy.uint64(0x0000ffff0000ffff)
+	x = (x | x << numpy.uint64(8)) & numpy.uint64(0x00ff00ff00ff00ff)
+	x = (x | x << numpy.uint64(4)) & numpy.uint64(0x0f0f0f0f0f0f0f0f)
+	x = (x | x << numpy.uint64(2)) & numpy.uint64(0x3333333333333333)
+	x = (x | x << numpy.uint64(1)) & numpy.uint64(0x5555555555555555)
+	return x
+
 def encode_magicbits_2D(x, y):
-    return ((split_by_2(numpy.uint64(y)) << numpy.uint64(1)) | split_by_2(numpy.uint64(x)))
+	return ((split_by_2(y) << numpy.uint64(1)) | split_by_2(x))
 
 
 #-----------------------------------------------------------------------
 #2D Decoding
 
-def get_second_bits(x):
-    x = numpy.uint64(x) & numpy.uint64(0x5555555555555555)
-    x = (x | (x >> numpy.uint64(1)))  & numpy.uint64(0x3333333333333333)
-    x = (x | (x >> numpy.uint64(2)))  & numpy.uint64(0x0f0f0f0f0f0f0f0f)
-    x = (x | (x >> numpy.uint64(4)))  & numpy.uint64(0x00ff00ff00ff00ff)
-    x = (x | (x >> numpy.uint64(8))) & numpy.uint64(0x0000ffff0000ffff)
-    x = (x | (x >> numpy.uint64(16))) & numpy.uint64(0x00000000ffffffff)
-    
-    #This takes 5 shifts, 5 Ors, and 6 Ands.
-    return x
+def get_second_bits(a):
+	x = numpy.uint64(a) & numpy.uint64(0x5555555555555555)
+	x = (x | (x >> numpy.uint64(1)))  & numpy.uint64(0x3333333333333333)
+	x = (x | (x >> numpy.uint64(2)))  & numpy.uint64(0x0f0f0f0f0f0f0f0f)
+	x = (x | (x >> numpy.uint64(4)))  & numpy.uint64(0x00ff00ff00ff00ff)
+	x = (x | (x >> numpy.uint64(8))) & numpy.uint64(0x0000ffff0000ffff)
+	x = (x | (x >> numpy.uint64(16))) & numpy.uint64(0x00000000ffffffff)
+	
+	#This takes 5 shifts, 5 Ors, and 6 Ands.
+	return x
 
-def decode_magicbits_2D(morton):
-    y = get_second_bits(numpy.uint64(morton) >> numpy.uint64(1))
-    x = get_second_bits(morton)
-    return (numpy.uint32(x),numpy.uint32(y))
+def decode_magicbits_2D(M):
+	morton=numpy.uint64(M)
+	y = get_second_bits(morton >> numpy.uint64(1))
+	x = get_second_bits(morton)
+	return (numpy.uint32(x),numpy.uint32(y))
 
   
 #-----------------------------------------------------------------------
 #3D Encoding
 
 def split_by_3(a):
-    x = numpy.uint64(a) & numpy.uint64(0x1fffff)
-    x = (x | x << numpy.uint64(32)) & numpy.uint64(0x1f00000000ffff)
-    x = (x | x << numpy.uint64(16)) & numpy.uint64(0x1f0000ff0000ff)
-    x = (x | x << numpy.uint64(8)) & numpy.uint64(0x100f00f00f00f00f)
-    x = (x | x << numpy.uint64(4)) & numpy.uint64(0x10c30c30c30c30c3)
-    x = (x | x << numpy.uint64(2)) & numpy.uint64(0x1249249249249249)
-    
-    #This takes 5 shifts, 5 Ors, and 6 Ands.
-    return x
-    
+	x = numpy.uint64(a) & numpy.uint64(0x1fffff)
+	x = (x | x << numpy.uint64(32)) & numpy.uint64(0x1f00000000ffff)
+	x = (x | x << numpy.uint64(16)) & numpy.uint64(0x1f0000ff0000ff)
+	x = (x | x << numpy.uint64(8)) & numpy.uint64(0x100f00f00f00f00f)
+	x = (x | x << numpy.uint64(4)) & numpy.uint64(0x10c30c30c30c30c3)
+	x = (x | x << numpy.uint64(2)) & numpy.uint64(0x1249249249249249)
+	
+	#This takes 5 shifts, 5 Ors, and 6 Ands.
+	return x
+
 def encode_magicbits_3D(x, y, z):
-    return ((split_by_3(z) << numpy.uint64(2))| (split_by_3(y) << numpy.uint64(1)) | split_by_3(x))
+	return ((split_by_3(z) << numpy.uint64(2))| (split_by_3(y) << numpy.uint64(1)) | split_by_3(x))
 
 #Note that only 21bits of each x,y,z coordinate is available for converting to
 #a 63bit Morton key.
@@ -94,28 +95,29 @@ def encode_magicbits_3D(x, y, z):
 #-----------------------------------------------------------------------
 #3D Decoding
 
-def get_third_bits(x):
-    #Original function was flawed. Corrections were made by trial and 
-    #error and tested to be correct. A published reference to the correct 
-    #implementation was also found in the discussion posted on stack overflow  
-    #and linked below. There are other good suggestions in this post which
-    #need further investigation for performance improvements in the c++ version.
-    #Reference: http://stackoverflow.com/questions/4909263/how-to-efficiently-de-interleave-bits-inverse-morton/28358035#28358035
-    x = x & numpy.uint64(0x9249249249249249)
-    x = (x | (x >> numpy.uint64(2)))  & numpy.uint64(0x30c30c30c30c30c3)
-    x = (x | (x >> numpy.uint64(4)))  & numpy.uint64(0xf00f00f00f00f00f)
-    x = (x | (x >> numpy.uint64(8)))  & numpy.uint64(0x00ff0000ff0000ff)
-    x = (x | (x >> numpy.uint64(16))) & numpy.uint64(0xffff00000000ffff)
-    x = (x | (x >> numpy.uint64(32))) & numpy.uint64(0x00000000ffffffff)
-    
-    #//This takes 5 shifts, 5 Ors, and 6 Ands.
-    return x
+def get_third_bits(a):
+	#Original function was flawed. Corrections were made by trial and 
+	#error and tested to be correct. A published reference to the correct 
+	#implementation was also found in the discussion posted on stack overflow  
+	#and linked below. There are other good suggestions in this post which
+	#need further investigation for performance improvements in the c++ version.
+	#Reference: http://stackoverflow.com/questions/4909263/how-to-efficiently-de-interleave-bits-inverse-morton/28358035#28358035
+	x = numpy.uint64(a) & numpy.uint64(0x9249249249249249)
+	x = (x | (x >> numpy.uint64(2)))  & numpy.uint64(0x30c30c30c30c30c3)
+	x = (x | (x >> numpy.uint64(4)))  & numpy.uint64(0xf00f00f00f00f00f)
+	x = (x | (x >> numpy.uint64(8)))  & numpy.uint64(0x00ff0000ff0000ff)
+	x = (x | (x >> numpy.uint64(16))) & numpy.uint64(0xffff00000000ffff)
+	x = (x | (x >> numpy.uint64(32))) & numpy.uint64(0x00000000ffffffff)
+	
+	#//This takes 5 shifts, 5 Ors, and 6 Ands.
+	return x
 
-def decode_magicbits_3D(morton):
-    z = get_third_bits(morton>>numpy.uint64(2))
-    y = get_third_bits(morton>>numpy.uint64(1))
-    x = get_third_bits(morton)
-    return (numpy.uint32(x), numpy.uint32(y), numpy.uint32(z))
+def decode_magicbits_3D(M):
+	morton=numpy.uint64(M)
+	z = get_third_bits(morton>>numpy.uint64(2))
+	y = get_third_bits(morton>>numpy.uint64(1))
+	x = get_third_bits(morton)
+	return (numpy.uint32(x), numpy.uint32(y), numpy.uint32(z))
 
    
 #-----------------------------------------------------------------------

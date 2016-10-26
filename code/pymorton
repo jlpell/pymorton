@@ -214,7 +214,7 @@ def test_xyz(N):
 
 
 #-----------------------------------------------------------------------
-#Request x, y, and z integer coordinates interactively and return 
+#Request x, y, and/or z integer coordinates interactively and return 
 #the corresponding morton code. Then request a morton code and return
 #the coordinates.
 def test_interactive():
@@ -236,8 +236,9 @@ def test_interactive():
 		else:
 			print("M=",morton.encode_magicbits_3D(x, y, z))
 			print(" ")
-			M = input('Enter M: ')
-			print("(x,y) = ",morton.decode_magicbits_2D(M))
+		M = input('Enter M: ')
+		print("(x,y) = ",morton.decode_magicbits_2D(M))
+		print("(x,y,z) = ",morton.decode_magicbits_3D(M))
 
 
 #-----------------------------------------------------------------------
