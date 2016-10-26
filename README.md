@@ -2,7 +2,7 @@ pymorton
 ========
 ###v0.1
 
-A simple cli interface for encoding/decoding both 2d and 3d integer coordinates to/from Morton codes via the shell.  
+A simple cli interface for encoding/decoding 2d and 3d integer coordinates to/from Morton codes via the shell.  
 This is prototype-grade code written in python 3, compatible with *nix-like operating systems,  
 and distributed under the MIT License.
 
