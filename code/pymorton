@@ -99,10 +99,8 @@ def test_xy(N):
 	xyfile.write("# Testing random X,Y Integer coordinates.\n")
 	xyfile.write("# (N, MAX_INT, MIN_INT) = ("+str(N) + "," + str(MAX_INT)+",0)\n")
 	for i in range(0, len(random2_x)):
-		xyfile.write(str(random2_x[i]))
-		xyfile.write(" ")
-		xyfile.write(str(random2_y[i]))
-		xyfile.write('\n')
+		coord_string = str(random2_x[i]) + " " + str(random2_y[i]) + "\n"
+		xyfile.write(coord_string)
 	xyfile.close()
 	
 	M2dfile = open("test.morton2d",'w')
@@ -196,13 +194,8 @@ def test_xyz(N):
 	xyzfile.write("# Testing random X,Y,Z Integer coordinates.\n")
 	xyzfile.write("# (N, MAX_INT, MIN_INT) = ("+str(N) + "," + str(MAX_INT)+",0)\n")
 	for i in range(0, len(random3_x)):
-		xyzfile.write(str(random3_x[i]))
-		xyzfile.write(" ")
-		xyzfile.write(str(random3_y[i]))
-		xyzfile.write(" ")
-		xyzfile.write(str(random3_z[i]))
-		xyzfile.write(" ")
-		xyzfile.write('\n')
+		coord_string = str(random3_x[i]) + " " + str(random3_y[i]) + " " + str(random3_z[i]) + "\n"
+		xyzfile.write(coord_string)
 	xyzfile.close()
 	
 	M3dfile = open("test.morton3d",'w')
