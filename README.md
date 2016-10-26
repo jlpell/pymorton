@@ -3,7 +3,8 @@ pymorton
 ###v0.1
 
 A simple cli interface for encoding 2d and 3d integer coordinates to morton codes via the shell.  
-This is prototype-grade code written in python 3, compatible with *nix-like operating systems, and distributed under the MIT License.
+This is prototype-grade code written in python 3, compatible with *nix-like operating systems,  
+and distributed under the MIT License.
 
 ##Installation
 
