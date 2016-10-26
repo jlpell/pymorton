@@ -1,0 +1,455 @@
+#!/usr/bin/python3
+########################################################################
+#pymorton
+#v0.1
+#A simple python based cli interface to morton.py library functions.
+#Not intended for high performance code.
+#Distributed under the MIT License.
+
+#Copyright (c) 2016 Jacob Pelletier 
+
+#Permission is hereby granted, free of charge, to any person obtaining a
+#copy of this software and associated documentation files (the "Software"), 
+#to deal in the Software without restriction, including without limitation 
+#the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+#and/or sell copies of the Software, and to permit persons to whom the 
+#Software is furnished to do so, subject to the following conditions:
+
+#The above copyright notice and this permission notice shall be included 
+#in all copies or substantial portions of the Software.
+
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+#OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+#THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR 
+#OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+#ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR 
+#OTHER DEALINGS  IN THE SOFTWARE.
+
+########################################################################
+
+#System Libraries
+import time
+import numpy
+import sys
+import traceback
+import getopt
+
+#Local Library
+import morton
+
+
+#-----------------------------------------------------------------------
+#Tests: Generate N random 32bit integers for x and y coordinates.
+#Convert to  Morton codes using 2d functions, then convert back to 
+#coordinate arrays and compare.
+
+def test_xy(N):
+	#Seeding with current time.
+	numpy.random.seed(int(time.time()))
+	
+	#Full 32bit integers are allowed for both x and y components of 2D
+	#Morton codes.
+	MAX_INT=2**32 - 1
+	print("Testing Random X,Y Integer coordinates'...")
+	print("(N, MAX_INT, MIN_INT) = ("+str(N) + "," + str(MAX_INT)+",0)")
+	random2_x = numpy.random.random_integers(	low=0,
+												high=MAX_INT,
+												size=N	).astype(numpy.uint32)
+	random2_y = numpy.random.random_integers(	low=0,
+												high=MAX_INT,
+												size=N	).astype(numpy.uint32)
+	
+	t0 = time.time()
+	M2d_encode = morton.encode_magicbits_2D(random2_x, random2_y)
+	t1 = time.time()
+	print("Encoding time (32bit [X,Y] -> [M] 64bit) = " + str(t1-t0) + " s")
+	t0 = time.time()
+	(x_decode, y_decode) = morton.decode_magicbits_2D(M2d_encode)
+	t1 = time.time()
+	print("Decoding time (64bit [M] -> [X,Y] 32bit) = " + str(t1-t0) + " s")
+	
+	arrays_notequal=False
+	if numpy.array_equal(x_decode, random2_x):
+		print("X coordinates match.")
+	else:
+		print("\nError: X coordinates do not match!")
+		arrays_notequal=True
+		if N < 20:
+			print("x_orig:")
+			print(random2_x)
+			print("x_decode:")
+			print(x_decode)
+	if numpy.array_equal(y_decode, random2_y):
+		print("Y coordinates match.")
+	else:
+		print("\nError: Y coordinates do not match!")
+		arrays_notequal=True
+		if N < 20:
+			print("y_orig:")
+			print(random2_y)
+			print("y_decode:")
+			print(y_decode)
+	if arrays_notequal:
+		print("M:")
+		print(M2d_encode)
+	
+	#Print the results to a file for visual inspection.
+	xyfile = open("test.xy",'w')
+	xyfile.write("# Testing random X,Y Integer coordinates.\n")
+	xyfile.write("# (N, MAX_INT, MIN_INT) = ("+str(N) + "," + str(MAX_INT)+",0)\n")
+	for i in range(0, len(random2_x)):
+		xyfile.write(str(random2_x[i]))
+		xyfile.write(" ")
+		xyfile.write(str(random2_y[i]))
+		xyfile.write('\n')
+	xyfile.close()
+	
+	M2dfile = open("test.morton2d",'w')
+	M2dfile.write("# Morton conversion of file 'test.xy'.\n")
+	for i in range(0, len(M2d_encode)):
+		M2dfile.write(str(M2d_encode[i]))
+		M2dfile.write('\n')
+	M2dfile.close()
+	
+	
+def test_xyz(N):
+	#Max N to print
+	NmaxPrint = 10
+	
+	#Seeding with current time.
+	numpy.random.seed(int(time.time()))
+	
+	#In order to fit x,y, and z components into a 64bit morton code,
+	#each component is truncated to 21 bit.
+	MAX_INT=2**21 - 1
+	
+	print("\nTesting Random X,Y,Z Integer coordinates'...")
+	print("(N, MAX_INT, MIN_INT) = ("+str(N) + "," + str(MAX_INT)+",0)")
+	random3_x = numpy.random.random_integers(	low=0,
+												high=MAX_INT,
+												size=N	).astype(numpy.uint32)
+	random3_y = numpy.random.random_integers(	low=0,
+												high=MAX_INT,
+												size=N	).astype(numpy.uint32)
+	random3_z = numpy.random.random_integers(	low=0,
+												high=MAX_INT,
+												size=N	).astype(numpy.uint32)
+
+
+	t0 = time.time()
+	M3d_encode = morton.encode_magicbits_3D(random3_x, random3_y, random3_z)
+	t1 = time.time()
+	print("Encoding time (21bit [X,Y,Z] -> [M] 64bit) = " + str(t1-t0) + " s")
+
+	t0 = time.time()
+	(x_decode, y_decode, z_decode) = morton.decode_magicbits_3D(M3d_encode)
+	t1 = time.time()
+	print("Decoding time (64bit [M] -> [X,Y,Z] 21bit) = " + str(t1-t0) + " s")
+
+	arrays_notequal=False
+	
+	if numpy.array_equal(x_decode, random3_x):
+		print("X coordinates match.")
+	else:
+		print("\nError: X coordinates do not match!")
+		arrays_notequal=True
+		print("x_orig:")
+		print(random3_x)
+		print("x_decode:")
+		for i in range(0,NmaxPrint):
+			print(x_decode[i])
+		print("...")
+	
+	if numpy.array_equal(y_decode, random3_y):
+		print("Y coordinates match.")
+	else:
+		print("\nError: Y coordinates do not match!")
+		arrays_notequal=True
+		print("y_orig:")
+		print(random3_y)
+		print("y_decode:")
+		for i in range(0,NmaxPrint):
+			print(y_decode[i])
+		print("...")
+	
+	if numpy.array_equal(z_decode, random3_z):
+		print("Z coordinates match.")
+	else:
+		print("\nError: Z coordinates do not match!")
+		arrays_notequal=True
+		print("z_orig:")
+		print(random3_z)
+		print("z_decode:")
+		for i in range(0,NmaxPrint):
+			print(z_decode[i])
+		print("...")
+	
+	if arrays_notequal:
+		print("M:")
+		for i in range(0,NmaxPrint):
+			print(M2d_encode[i])
+		print("...")
+	
+	#Print the results to a file for visual inspection.
+	xyzfile = open("test.xyz",'w')
+	xyzfile.write("# Testing random X,Y,Z Integer coordinates.\n")
+	xyzfile.write("# (N, MAX_INT, MIN_INT) = ("+str(N) + "," + str(MAX_INT)+",0)\n")
+	for i in range(0, len(random3_x)):
+		xyzfile.write(str(random3_x[i]))
+		xyzfile.write(" ")
+		xyzfile.write(str(random3_y[i]))
+		xyzfile.write(" ")
+		xyzfile.write(str(random3_z[i]))
+		xyzfile.write(" ")
+		xyzfile.write('\n')
+	xyzfile.close()
+	
+	M3dfile = open("test.morton3d",'w')
+	M3dfile.write("# Morton conversion of file 'test.xyz'.\n")
+	for i in range(0, len(M3d_encode)):
+		M3dfile.write(str(M3d_encode[i]))
+		M3dfile.write('\n')
+	M3dfile.close()
+
+
+#-----------------------------------------------------------------------
+#Request x, y, and z integer coordinates interactively and return 
+#the corresponding morton code. Then request a morton code and return
+#the coordinates.
+def test_interactive():
+	while True:
+		print(" ")
+		x = input('Enter x: ')
+		y = input('Enter y: ')
+		z = input('Enter z (just hit enter 2d morton code): ')
+		
+		if (str(x) == "") or (str(y) == ""):
+			print("Missing x or y coordinate. Exiting.")
+			exit(0)
+			
+		if str(z) == "":
+			print("M=",morton.encode_magicbits_2D(x, y))
+			print(" ")
+			M = input('Enter M: ')
+			print("(x,y) = ",morton.decode_magicbits_2D(M))
+		else:
+			print("M=",morton.encode_magicbits_3D(x, y, z))
+			print(" ")
+			M = input('Enter M: ')
+			print("(x,y) = ",morton.decode_magicbits_2D(M))
+
+
+#-----------------------------------------------------------------------
+#Parse the cli arguments and toggle the appropriate control variables
+#for use in the main program.
+def parse_cli(sysargs):
+		
+	#Process the args using the getopt library.
+	#Reference: https://docs.python.org/2/library/getopt.html
+	opts=None
+	args=None
+	try:
+		opts, args = getopt.getopt(	sysargs[1:],
+									"d:etiN:hV",
+									[	"decode=",
+										"encode",
+										"test",
+										"interactive",
+										"number=",
+										"help",
+										"version"	])
+	except getopt.GetoptError as err:
+		print(str(err))
+		print("Unrecognized arguments. Try \"pymorton --help\".\n")
+		exit(1)
+	
+	#Set the default values.
+	decode = False
+	dim = None
+	encode = False
+	input_file = None
+	run_interactive = False
+	run_tests = False
+	
+	N = 1000
+	
+	for option, value in opts:
+		#print("option,value = ",(option,value))
+		if option in ("-d", "--decode"):
+			decode = True
+			dim = value
+		elif option in ("-e", "--encode"):
+			encode = True
+		elif option in ("-i", "--interactive"):
+			run_interactive = True
+		elif option in ("-t", "--test"):
+			run_tests = True
+		elif option in ("-N", "--number"):
+			N = int(value)
+		elif option in ("-h", "--help"):
+			print("Usage: pymorton [options]")
+			help_statement = \
+"""Options:
+  -d, --decode  : decode stdin morton codes to coordinates on stdout.
+  -e, --encode  : encode stdin coordinates to morton codes on stdout.
+  -i, --interactive  : perform conversions interactively.
+  -t, --test	: test encoding/decoding routines.
+  -N, --number : number of samples to use for tests.
+  -h, --help  : show this help screen.
+  -V, --version : show version info.
+
+  Notes: Input and output files can be used by using shell pipes. Encoding
+  will detect 2d or 3d based on the number of coordinates of the first 
+  entry. Decoding requires one to specify 2d or 3d.
+	
+  Examples: 
+  pymorton --encode
+  pymorton --decode=2d
+  pymorton --encode < infile.coords > outfile.morton
+  pymorton --decode=3d < infile.morton > infile.coords
+"""
+			print(help_statement)
+			exit(0)
+			
+		elif option in ("-V", "--version"):
+			version_statement = \
+"""pymorton v0.1
+By: Jacob Pelletier
+A simple cli interface to morton.py library functions.
+This is free software distributed under the MIT license."""
+			print(version_statement)
+			exit(0)
+			
+	return (decode, dim, encode, run_interactive, run_tests, N)
+
+
+#-----------------------------------------------------------------------
+#Decoding
+def decode_stdin(dim):
+	print("# Begin pymorton decode filter.")
+	if dim == "2d":
+		for line in sys.stdin:
+			if line[0] == '#':
+				modline = "#<input stream comment> : " + line.lstrip('#').rstrip('\n')
+				print(modline)
+			else :
+				MC = numpy.uint64(line.rstrip('\n'))
+				coords= morton.decode_magicbits_2D(MC)
+				print(str(coords[0]) + " " + str(coords[1]))
+	else:
+		for line in sys.stdin:
+			if line[0] == '#':
+				modline = "#<input stream comment> : " + line.lstrip('#').rstrip('\n')
+				print(modline)
+			else:
+				MC = numpy.uint64(line.rstrip('\n'))
+				coords = morton.decode_magicbits_3D(MC)
+				print(str(coords[0]) + " " + str(coords[1]) + " " + str(coords[2]))
+	return 0	
+
+
+#-----------------------------------------------------------------------
+#Encoding
+def encode_line_2d(line, delim):
+	#The coords must be tab delimited or space delimited.
+	line_coords = line.rstrip('\n').split(delim)
+	x = numpy.uint64(line_coords[0])
+	y = numpy.uint64(line_coords[1])
+	print(str(morton.encode_magicbits_2D(x,y)))
+
+def encode_line_3d(line, delim):
+	line_coords = line.rstrip('\n').split(delim)
+	x = numpy.uint64(line_coords[0])
+	y = numpy.uint64(line_coords[1])
+	z = numpy.uint64(line_coords[2])
+	print(str(morton.encode_magicbits_3D(x,y,z)))
+					
+def encode_stdin():
+	#Read stdin up to the first non-comment entry.
+	#Determine whether dim=2d or dim=3d.
+	dim = None
+	delim = None
+	print("# Begin pymorton encode filter.")
+	while (dim == None) and (delim == None ):
+		line = sys.stdin.readline().rstrip('\n')
+		if line[0] == '#':
+			modline = "#<input stream comment> : " + line.lstrip('#')
+			print(modline)
+		else:
+			splitline = line.split('\t')
+			if len(splitline) == 1:
+				splitline = splitline[0].split(' ')
+				delim = ' '
+			else:
+				delim = '\t'
+			if len(splitline) == 2:
+				dim = "2d"
+				encode_line_2d(line, delim)
+				
+			elif len(splitline) == 3:
+				dim = "3d"
+				encode_line_3d(line, delim)
+	
+	#Now proceed with the rest of the stream.
+	if dim == "2d":
+		for line in sys.stdin:
+			if line[0] == '#':
+				modline = "#<input stream comment> : " + line.lstrip('#').rstrip('\n')
+				print(modline)
+			else :
+				encode_line_2d(line, delim)
+	else:
+		for line in sys.stdin:
+			if line[0] == '#':
+				modline = "#<input stream comment> : " + line.lstrip('#').rstrip('\n')
+				print(modline)
+			else:
+				encode_line_3d(line, delim)
+	return 0	
+
+
+#-----------------------------------------------------------------------
+#The executable's main function.
+def main():
+	delim = None
+	#Parse the cli.
+	(	decode,
+		dim,
+		encode,
+		run_interactive,
+		run_tests,
+		N	) = parse_cli(sys.argv)
+	
+	#Subroutine decision tree.	
+	if run_tests:
+		test_xy(N)
+		test_xyz(N)
+		exit(0)
+		
+	elif run_interactive:
+		test_interactive()
+		exit(0)
+	
+	if encode:
+		encode_stdin()
+	
+	elif decode:
+		decode_stdin(dim)
+	
+	else:
+		print("Error: unrecognized set of options. Try \'pymorton --help\'.")
+		exit(1)
+			
+	#Program finished successfully.
+	exit(0)
+
+
+if __name__ == "__main__":
+	try:
+		main()
+	except KeyboardInterrupt:
+		print("\nShutdown requested...exiting\n")
+	except Exception:
+		traceback.print_exc(file=sys.stderr)
+	exit(0)
