@@ -41,8 +41,8 @@ import morton
 
 
 #-----------------------------------------------------------------------
-#Tests: Generate N random 32bit integers for x and y coordinates.
-#Convert to  Morton codes using 2d functions, then convert back to 
+#Tests: Generate N random 32bit integers for x, y and/or z coordinates.
+#Convert to  coordinates to 64bit Morton codes, then convert back to
 #coordinate arrays and compare.
 def test_xy(N):
 	#Seeding with current time.
