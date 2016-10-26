@@ -317,7 +317,7 @@ def parse_cli(sysargs):
 			version_statement = \
 """pymorton v0.1
 By: Jacob Pelletier
-A simple cli interface to morton.py library functions.
+A simple cli interface for generating  morton codes via the shell.
 This is free software distributed under the MIT license."""
 			print(version_statement)
 			exit(0)
